@@ -1,0 +1,23 @@
+{
+  "name": "vibeguard-sandbox",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "tsx test-run.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "tsx": "^4.23.11",
+    "typescript": "^5.9.3"
+  },
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "esbuild": "^0.28.1",
+    "undici-types": "^7.18.2"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
