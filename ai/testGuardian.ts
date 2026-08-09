@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { evaluateWithGuardian } from "./graniteGuardian.js";
+import { evaluateWithGuardian } from "./Guardian.js";
 
 dotenv.config({
     path: "./backend/.env",

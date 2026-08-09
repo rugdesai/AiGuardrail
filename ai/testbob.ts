@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { askBob } from "./bob.js";
-import type { GuardianResponse } from "./graniteGuardian.js";
+import type { GuardianResponse } from "./Guardian.js";
 
 dotenv.config({
     path: "./backend/.env",

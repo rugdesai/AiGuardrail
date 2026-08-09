@@ -3,7 +3,7 @@ import { BOB_SYSTEM_PROMPT } from "./prompts/bobSystemPrompt.js";
 
 import type {
     GuardianResponse
-} from "./graniteGuardian.js";
+} from "./Guardian.js";
 
 export interface ChatMessage {
     role: "user" | "assistant";
