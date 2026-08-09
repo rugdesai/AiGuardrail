@@ -1,13 +1,19 @@
 import axios from "axios";
 import { getAccessToken } from "./auth.js";
 
-const PROJECT_ID = process.env.WATSONX_PROJECT_ID!;
-const BASE_URL = process.env.WATSONX_URL!;
-
 export async function callWatsonX(
     systemPrompt: string,
     userPrompt: string
 ): Promise<string> {
+
+    const PROJECT_ID = process.env.WATSONX_PROJECT_ID;
+    const BASE_URL = process.env.WATSONX_URL;
+
+    if (!PROJECT_ID || !BASE_URL) {
+        throw new Error(
+            "Missing WATSONX_PROJECT_ID or WATSONX_URL environment variables."
+        );
+    }
 
     const token = await getAccessToken();
     const response = await axios.post(
@@ -15,7 +21,7 @@ export async function callWatsonX(
         {
             input: `${systemPrompt}\n\n${userPrompt}`,
 
-            model_id: "ibm/granite-3-3-8b-instruct",
+            model_id: "meta-llama/llama-3-3-70b-instruct",
 
             project_id: PROJECT_ID,
 
@@ -29,7 +35,9 @@ export async function callWatsonX(
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
+                Accept: "application/json",
             },
+            timeout: 30000,
         }
         
     );

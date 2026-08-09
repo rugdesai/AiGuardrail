@@ -20,31 +20,67 @@ export async function evaluateWithGuardian(
     sandboxOutput: string
 ): Promise<GuardianResponse> {
 try{
-    const userPrompt = `
-    Analyze the following code.
+const userPrompt = `
+Analyze ONLY the following submission.
 
-    Source Code:
-    ${sourceCode}
+Return EXACTLY ONE JSON object.
 
-    Static Analysis Findings:
-    ${JSON.stringify(staticFlags, null, 2)}
+Source Code:
+${sourceCode}
 
-    Sandbox Execution:
-    ${sandboxOutput}
-    `;
+Static Analysis Findings:
+${JSON.stringify(staticFlags, null, 2)}
+
+Sandbox Execution:
+${sandboxOutput}
+
+Do not analyze any other examples.
+Do not generate multiple answers.
+Return one JSON object only.
+`;
 
     const rawResponse = await callWatsonX(
         GUARDIAN_SYSTEM_PROMPT,
         userPrompt
     );
-    const cleanedResponse = rawResponse
-        .replace(/```json/g, "")
-        .replace(/```/g, "")
-        .trim();
 
-    const parsedResponse = JSON.parse(cleanedResponse);
+const cleaned = rawResponse
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
 
-    return GuardianResponseSchema.parse(parsedResponse);
+let depth = 0;
+let start = -1;
+let end = -1;
+
+for (let i = 0; i < cleaned.length; i++) {
+    const ch = cleaned[i];
+
+    if (ch === "{") {
+        if (depth === 0) start = i;
+        depth++;
+    } else if (ch === "}") {
+        depth--;
+
+        if (depth === 0) {
+            end = i;
+            break;
+        }
+    }
+}
+
+if (start === -1 || end === -1) {
+    throw new Error("Could not find a valid JSON object.");
+}
+
+const jsonString = cleaned.substring(start, end + 1);
+
+console.log("Extracted JSON:");
+console.log(jsonString);
+
+const parsed = JSON.parse(jsonString);
+
+return GuardianResponseSchema.parse(parsed);
 }catch(error){
     console.error("Guardian evaluation failed:", error);
     return {

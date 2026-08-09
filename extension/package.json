@@ -1,0 +1,63 @@
+{
+  "name": "vibe-guard",
+  "displayName": "Vibe-Guard",
+  "description": "AI-generated code security scanner with real sandbox execution",
+  "version": "0.0.1",
+  "publisher": "vibe-guard-team",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rugdesai/AiGuardrail.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vibeguard.scanAndRun",
+        "title": "Vibe-Guard: Scan & Run",
+        "icon": "$(shield)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "vibeguard.scanAndRun",
+          "group": "navigation",
+          "when": "editorHasSelection || resourceExtname == .py || resourceExtname == .js"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "vibeguard.scanAndRun",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "vibeguard.scanAndRun",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.0.0"
+  }
+}

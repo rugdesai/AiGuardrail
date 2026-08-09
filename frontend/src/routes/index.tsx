@@ -35,10 +35,31 @@ function Index() {
   const [stage, setStage] = useState(0);
 
   useEffect(() => {
-    const timers = securityReport.pipeline.map((_, i) =>
-      setTimeout(() => setStage(i + 1), 500 * (i + 1)),
-    );
-    return () => timers.forEach(clearTimeout);
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.command === 'startScan') {
+        console.log('Received code to scan:', event.data.code);
+        setStage(0);
+        const timers = securityReport.pipeline.map((_, i) =>
+          setTimeout(() => setStage(i + 1), 500 * (i + 1))
+        );
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Fallback: If someone just opens localhost:5173 in a normal browser, auto-start after 1 second for demo purposes
+    const isVSCode = window !== window.parent;
+    let fallbackTimers: NodeJS.Timeout[] = [];
+    if (!isVSCode) {
+      fallbackTimers = securityReport.pipeline.map((_, i) =>
+        setTimeout(() => setStage(i + 1), 1000 + 500 * (i + 1))
+      );
+    }
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      fallbackTimers.forEach(clearTimeout);
+    };
   }, []);
 
   const done = stage >= securityReport.pipeline.length;
