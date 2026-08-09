@@ -5,23 +5,45 @@ import type {
     GuardianResponse
 } from "./graniteGuardian.js";
 
+export interface ChatMessage {
+    role: "user" | "assistant";
+    content: string;
+}
+
 export async function askBob(
 
     question: string,
 
-    guardianResult: GuardianResponse
+    guardianResult: GuardianResponse,
+
+    history: ChatMessage[] = []
 
 ): Promise<string> {
 
+    const conversation = history
+    .map(
+        message =>
+            `${message.role.toUpperCase()}: ${message.content}`
+    )
+    .join("\n\n");
+
     const userPrompt = `
-Guardian Evaluation:
+    Guardian Evaluation:
 
-${JSON.stringify(guardianResult, null, 2)}
+    ${JSON.stringify(guardianResult, null, 2)}
 
-User Question:
+    Previous Conversation:
 
-${question}
-`;
+    ${conversation}
+
+    Current User Question:
+
+    ${question}
+
+    Answer the current question while using both the Guardian evaluation and the previous conversation as context.
+
+    If there is no previous conversation, simply answer the current question.
+    `;
 
     const response = await callWatsonX(
 
