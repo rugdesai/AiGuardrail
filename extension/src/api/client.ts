@@ -27,9 +27,9 @@ export async function analyzeCode(
   language: string
 ): Promise<FinalVerdict> {
   // --- INTEGRATION FLAG ---
-  // Change this to 'true' when you have the real API URL!
+  // Change this to 'true' when backend is hosted on a public URL!
   const USE_REAL_API = true; 
-  const API_URL = "http://127.0.0.1:8000/analyze"; // TODO: Update this when backend is ready
+  const API_URL = "http://127.0.0.1:8000/analyze"; // TODO: Update with hosted backend URL
 
   if (!USE_REAL_API) {
     console.log(`[Vibe-Guard] Analyzing ${language} code (MOCK MODE)`);

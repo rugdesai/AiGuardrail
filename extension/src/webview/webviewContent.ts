@@ -245,6 +245,25 @@ export function getWebviewContent(isLoading: boolean, verdict?: FinalVerdict): s
 
     <script>
       const vscode = acquireVsCodeApi();
+
+      // Listen for Bob's reply coming back from the extension
+      window.addEventListener("message", (event) => {
+        const message = event.data;
+        if (message.command === "bobReply") {
+          const messages = document.getElementById("chat-messages");
+          
+          // Remove the "Thinking..." bubble
+          const thinking = document.getElementById("bob-thinking");
+          if (thinking) { thinking.remove(); }
+
+          const bobMsg = document.createElement("div");
+          bobMsg.className = "chat-msg bob";
+          bobMsg.textContent = message.text;
+          messages.appendChild(bobMsg);
+          messages.scrollTop = messages.scrollHeight;
+        }
+      });
+
       function sendMessage() {
         const input = document.getElementById("chat-input");
         const text = input.value.trim();
@@ -252,22 +271,25 @@ export function getWebviewContent(isLoading: boolean, verdict?: FinalVerdict): s
         
         const messages = document.getElementById("chat-messages");
         
+        // Add user message
         const userMsg = document.createElement("div");
         userMsg.className = "chat-msg user";
         userMsg.textContent = text;
         messages.appendChild(userMsg);
         
         input.value = "";
+
+        // Add "Thinking..." bubble
+        const thinkingMsg = document.createElement("div");
+        thinkingMsg.className = "chat-msg bob";
+        thinkingMsg.id = "bob-thinking";
+        thinkingMsg.textContent = "⏳ Thinking...";
+        messages.appendChild(thinkingMsg);
+
         messages.scrollTop = messages.scrollHeight;
         
-        // Mock response for demo
-        setTimeout(() => {
-          const bobMsg = document.createElement("div");
-          bobMsg.className = "chat-msg bob";
-          bobMsg.textContent = "I'd recommend replacing os.system('rm -rf') with the safer shutil.rmtree() after validating the input path!";
-          messages.appendChild(bobMsg);
-          messages.scrollTop = messages.scrollHeight;
-        }, 1000);
+        // Send to the VS Code extension which will call WatsonX
+        vscode.postMessage({ command: "askBob", text: text });
       }
 
       document.addEventListener("keydown", (e) => {
