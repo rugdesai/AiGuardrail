@@ -5,29 +5,22 @@
   "version": "0.0.1",
   "publisher": "vibe-guard-team",
   "icon": "images/icon.png",
-
   "repository": {
     "type": "git",
     "url": "https://github.com/rugdesai/AiGuardrail.git"
   },
-
   "bugs": {
     "url": "https://github.com/rugdesai/AiGuardrail/issues"
   },
-
   "homepage": "https://github.com/rugdesai/AiGuardrail",
-
   "license": "MIT",
-
   "engines": {
     "vscode": "^1.85.0"
   },
-
   "categories": [
     "Linters",
     "Testing"
   ],
-
   "keywords": [
     "security",
     "code security",
@@ -39,11 +32,8 @@
     "secure coding",
     "code analysis"
   ],
-
   "activationEvents": [],
-
   "main": "./out/extension.js",
-
   "contributes": {
     "commands": [
       {
@@ -52,7 +42,6 @@
         "icon": "$(shield)"
       }
     ],
-
     "menus": {
       "editor/context": [
         {
@@ -61,7 +50,6 @@
           "when": "editorHasSelection || resourceExtname == .py || resourceExtname == .js"
         }
       ],
-
       "editor/title": [
         {
           "command": "vibeguard.scanAndRun",
@@ -69,7 +57,6 @@
         }
       ]
     },
-
     "keybindings": [
       {
         "command": "vibeguard.scanAndRun",
@@ -79,13 +66,11 @@
       }
     ]
   },
-
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./"
   },
-
   "devDependencies": {
     "@types/node": "^26.2.0",
     "@types/vscode": "^1.85.0",
