@@ -15,18 +15,22 @@ app.post("/run-sandbox", async (req, res) => {
       });
     }
 
+    // Your Docker + telemetry logic
     const result = await runSandbox(code, language);
 
     return res.json(result);
   } catch (error) {
-    console.error("Sandbox error:", error);
+    console.error("FATAL SANDBOX ERROR:", error);
+
+    const message =
+      error instanceof Error ? error.message : "Unknown sandbox error";
 
     return res.status(500).json({
-      error: "Sandbox execution failed",
+      error: message,
     });
   }
 });
 
-app.listen(3000, "0.0.0.0", () => {
-  console.log("Sandbox API running on http://0.0.0.0:3000");
+app.listen(3000, "127.0.0.1", () => {
+  console.log("Sandbox API running on http://127.0.0.1:3000");
 });
