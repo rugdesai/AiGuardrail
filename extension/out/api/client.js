@@ -109,29 +109,7 @@ async function analyzeCode(code, language) {
             aiRisk: 0,
             threats: ['Could not connect to backend. Make sure the server is running.'],
             explanation: 'Could not connect to backend.',
-            diagnostics: [],
-            status: 'ERROR',
-            aiEngine: 'Unavailable',
-            llmInvoked: false,
-            llmReason: 'Backend connection failed.',
-            summary: {
-                critical: 0,
-                high: 0,
-                medium: 0,
-                low: 0
-            },
-            sandboxResult: {
-                exitCode: 0,
-                stdout: '',
-                stderr: '',
-                filesCreated: [],
-                filesModified: [],
-                filesDeleted: [],
-                processesSpawned: [],
-                networkAttempts: [],
-                durationMs: 0,
-                timedOut: false
-            }
+            sandboxResult: { exitCode: 0, stdout: '', stderr: '', filesCreated: [], filesModified: [], filesDeleted: [], processesSpawned: [], networkAttempts: [], durationMs: 0, timedOut: false }
         };
     }
 }
