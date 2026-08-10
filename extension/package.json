@@ -1,20 +1,36 @@
 {
-  "name": "vibe-guard",
-  "displayName": "Vibe-Guard",
-  "description": "AI-generated code security scanner with real sandbox execution",
+  "name": "vibeguard-ai",
+  "displayName": "VibeGuard AI",
+  "description": "AI-powered code security scanner for VS Code with static analysis, sandbox execution, risk scoring, and AI-assisted vulnerability detection.",
   "version": "0.0.1",
   "publisher": "vibe-guard-team",
-  "icon": "icon.png",
+  "icon": "images/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/rugdesai/AiGuardrail.git"
   },
+  "bugs": {
+    "url": "https://github.com/rugdesai/AiGuardrail/issues"
+  },
+  "homepage": "https://github.com/rugdesai/AiGuardrail",
   "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
-    "Other"
+    "Linters",
+    "Testing"
+  ],
+  "keywords": [
+    "security",
+    "code security",
+    "vulnerability",
+    "static analysis",
+    "sandbox",
+    "AI security",
+    "security scanner",
+    "secure coding",
+    "code analysis"
   ],
   "activationEvents": [],
   "main": "./out/extension.js",

@@ -1,13 +1,88 @@
+export interface Diagnostic {
+  id?: string;
+  type?: string;
+  message?: string;
+  lineStart?: number;
+  lineEnd?: number;
+  severity?: string;
+  confidence?: number;
+  cwe?: string;
+  owasp?: string;
+  source?: string[];
+  evidence?: string;
+  attackPath?: string[];
+  remediation?: string;
+  fixedCode?: string | null;
+}
+
 export interface FinalVerdict {
   executionId: string;
+
   decision: 'ALLOW' | 'BLOCK' | 'WARN';
+
   finalRisk: number;
   confidence: number;
+
   staticRisk: number;
   runtimeRisk: number;
   aiRisk: number;
+
   threats: string[];
   explanation: string;
+
+  status?: string;
+  aiEngine?: string;
+  llmInvoked?: boolean;
+  llmReason?: string;
+
+  summary?: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+
+  diagnostics?: Array<{
+    id?: string;
+    type?: string;
+    message?: string;
+    lineStart?: number;
+    lineEnd?: number;
+    severity?: string;
+    confidence?: number;
+    cwe?: string;
+    owasp?: string;
+    source?: string[];
+    evidence?: string;
+    attackPath?: string[];
+    remediation?: string;
+    fixedCode?: string | null;
+  }>;
+
+  sandbox?: {
+    available: boolean;
+    sandboxRiskScore: number;
+    reason?: string;
+    networkAttempts?: string[];
+    filesCreated?: string[];
+    processesSpawned?: string[];
+    duration_ms?: number;
+  };
+
+  analyzers?: {
+    static?: boolean;
+    semgrep?: boolean;
+    secrets?: boolean;
+    sandbox?: boolean;
+    dependencyCheck?: boolean;
+    llm?: boolean;
+  };
+
+  correlation?: {
+    multiSourceFindings?: number;
+    confirmedFindings?: any[];
+  };
+
   sandboxResult: {
     exitCode: number;
     stdout: string;
@@ -22,6 +97,7 @@ export interface FinalVerdict {
   };
 }
 
+
 export async function analyzeCode(
   code: string,
   language: string
@@ -30,11 +106,33 @@ export async function analyzeCode(
 
   console.log(`[Vibe-Guard] Analyzing ${language} code...`);
   try {
+
     const response = await fetch(API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ codeSnippet: code, language: language })
+
+      headers: {
+        'Content-Type': 'application/json'
+      },
+
+      body: JSON.stringify({
+        codeSnippet: code,
+        language: language,
+        userPrompt: 'Find security vulnerabilities'
+      })
     });
+
+
+    // -------------------------------------------------------
+    // HTTP ERROR CHECK
+    // -------------------------------------------------------
+
+    if (!response.ok) {
+      throw new Error(
+        `Backend returned HTTP ${response.status}`
+      );
+    }
+
+
     const data = await response.json();
 
     // --- Map status to decision ---

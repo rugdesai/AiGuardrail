@@ -7,9 +7,21 @@ async function analyzeCode(code, language) {
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ codeSnippet: code, language: language })
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                codeSnippet: code,
+                language: language,
+                userPrompt: 'Find security vulnerabilities'
+            })
         });
+        // -------------------------------------------------------
+        // HTTP ERROR CHECK
+        // -------------------------------------------------------
+        if (!response.ok) {
+            throw new Error(`Backend returned HTTP ${response.status}`);
+        }
         const data = await response.json();
         // --- Map status to decision ---
         const statusMap = {
@@ -97,7 +109,29 @@ async function analyzeCode(code, language) {
             aiRisk: 0,
             threats: ['Could not connect to backend. Make sure the server is running.'],
             explanation: 'Could not connect to backend.',
-            sandboxResult: { exitCode: 0, stdout: '', stderr: '', filesCreated: [], filesModified: [], filesDeleted: [], processesSpawned: [], networkAttempts: [], durationMs: 0, timedOut: false }
+            diagnostics: [],
+            status: 'ERROR',
+            aiEngine: 'Unavailable',
+            llmInvoked: false,
+            llmReason: 'Backend connection failed.',
+            summary: {
+                critical: 0,
+                high: 0,
+                medium: 0,
+                low: 0
+            },
+            sandboxResult: {
+                exitCode: 0,
+                stdout: '',
+                stderr: '',
+                filesCreated: [],
+                filesModified: [],
+                filesDeleted: [],
+                processesSpawned: [],
+                networkAttempts: [],
+                durationMs: 0,
+                timedOut: false
+            }
         };
     }
 }

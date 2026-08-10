@@ -21,7 +21,21 @@ def audit_hook(event, args):
         except Exception:
             pass
 
-    if event == "socket.connect":
+    elif event == "os.system":
+        try:
+            command = args[0]
+
+            if isinstance(command, bytes):
+                command = command.decode("utf-8", errors="replace")
+
+            command = str(command)
+
+            processes.append(f"os.system: {command}")
+
+        except Exception:
+            pass
+
+    elif event == "socket.connect":
         try:
             address = args[1]
 

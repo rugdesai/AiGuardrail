@@ -4,31 +4,18 @@ async function main() {
   const result = await runSandbox(
     `
 import os
-import subprocess
-import socket
 
-# Create a file
-with open("malicious.txt", "w") as f:
-    f.write("suspicious content")
+with open("pwned.txt", "w") as f:
+    f.write("PWNED")
 
-# Spawn a process
-subprocess.run(["ls", "-la"])
+os.system("ls -la /")
 
-# Attempt network access
-try:
-    socket.create_connection(("example.com", 80), timeout=2)
-except Exception:
-    print("NETWORK BLOCKED")
-
-# Delete the file
-os.remove("malicious.txt")
-
-print("ATTACK TEST COMPLETE")
+print("MALICIOUS TEST COMPLETE")
 `,
     "python"
   );
 
-  console.log("\\n=== FINAL ATTACK TEST ===");
+  console.log("\\n=== MALICIOUS TEST ===");
   console.log(result);
 }
 
