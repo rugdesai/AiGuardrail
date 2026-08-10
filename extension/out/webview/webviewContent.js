@@ -110,7 +110,13 @@ function getWebviewContent(isLoading, verdict) {
                 '<div class="chat-container">' +
                 '<div class="chat-header">Ask Bob (Security Copilot)</div>' +
                 '<div class="chat-messages" id="chat-messages">' +
-                '<div class="chat-msg bob">Hello! I noticed your code was blocked. Would you like me to suggest a safer alternative?</div>' +
+                '<div class="chat-msg bob">' +
+                (verdict.decision === 'BLOCK'
+                    ? `🚨 Your code was blocked (Risk: ${riskScore}/100). I found ${verdict.threats.length} issue(s). Ask me anything — I can explain the threats or suggest a safe rewrite.`
+                    : verdict.decision === 'WARN'
+                        ? `⚠️ Your code has ${verdict.threats.length} warning(s) (Risk: ${riskScore}/100). It can run, but I'd recommend fixing these. Want me to walk you through the issues?`
+                        : `✅ Your code looks safe (Risk: ${riskScore}/100). No threats detected. Feel free to ask me anything about the analysis!`) +
+                '</div>' +
                 '</div>' +
                 '<div class="chat-input-wrapper">' +
                 '<input type="text" class="chat-input" id="chat-input" placeholder="Ask how to fix this...">' +
@@ -125,21 +131,26 @@ function getWebviewContent(isLoading, verdict) {
     <title>Vibe-Guard Report</title>
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      :root { --bg: #0b0d12; --panel: rgba(21, 24, 35, 0.7); --panel-2: #1b1f2d; --border: rgba(38, 43, 58, 0.8); --text: #e7e9ee; --text-dim: #8890a4; --accent: #7c8aff; }
+      :root { 
+        --bg: #0d1117; 
+        --panel: #161b22; 
+        --panel-2: #21262d; 
+        --border: #30363d; 
+        --text: #c9d1d9; 
+        --text-dim: #8b949e; 
+        --accent: #58a6ff; 
+      }
       
       body { 
-        font-family: -apple-system, "Segoe UI", sans-serif; 
-        background: radial-gradient(circle at 0% 0%, rgba(124, 138, 255, 0.05) 0%, transparent 40%),
-                    radial-gradient(circle at 100% 100%, rgba(245, 85, 108, 0.05) 0%, transparent 40%),
-                    #0b0d12; 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; 
+        background: var(--bg); 
         color: var(--text); 
         min-height: 100vh; 
         padding: 30px; 
       }
       
       .header { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
-      .header-logo { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #7c8aff, #b06cff); display: flex; align-items: center; justify-content: center; color: #0b0d12; box-shadow: 0 6px 18px -6px #7c8aff88; }
-      .header-title { font-size: 19px; font-weight: 800; color: #fafbff; letter-spacing: -0.2px; }
+      .header-title { font-size: 19px; font-weight: 600; color: var(--text); letter-spacing: -0.2px; }
       .header-subtitle { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
 
       .timeline { display: flex; align-items: flex-start; margin-bottom: 26px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 22px; backdrop-filter: blur(10px); }
@@ -204,25 +215,24 @@ function getWebviewContent(isLoading, verdict) {
       .telemetry-row:last-child { margin-bottom: 0; }
       .telemetry-row span { color: var(--text); }
 
-      .guardian-card { background: linear-gradient(145deg, rgba(124, 138, 255, 0.08), rgba(176, 108, 255, 0.03)); border: 1px solid rgba(124, 138, 255, 0.2); border-radius: 12px; padding: 18px; margin-bottom: 26px; }
-      .guardian-header { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #d6dbff; margin-bottom: 10px; font-size: 14px; }
-      .guardian-body { font-size: 13.5px; line-height: 1.5; color: #a8b0cc; }
+      .guardian-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 26px; }
+      .guardian-header { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text); margin-bottom: 10px; font-size: 14px; }
+      .guardian-body { font-size: 13.5px; line-height: 1.5; color: var(--text-dim); }
 
       .chat-container { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; display: flex; flex-direction: column; height: 400px; overflow: hidden; }
-      .chat-header { padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; }
+      .chat-header { padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; }
       .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
       .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4; }
-      .chat-msg.bob { background: rgba(124, 138, 255, 0.1); color: #d6dbff; align-self: flex-start; border-bottom-left-radius: 4px; }
-      .chat-msg.user { background: var(--panel-2); color: var(--text); align-self: flex-end; border-bottom-right-radius: 4px; }
-      .chat-input-wrapper { display: flex; padding: 12px; border-top: 1px solid var(--border); gap: 10px; background: rgba(0,0,0,0.2); }
-      .chat-input { flex: 1; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); outline: none; }
-      .chat-btn { background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 0 16px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+      .chat-msg.bob { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
+      .chat-msg.user { background: var(--accent); color: var(--vscode-button-foreground, #fff); align-self: flex-end; border-bottom-right-radius: 4px; }
+      .chat-input-wrapper { display: flex; padding: 12px; border-top: 1px solid var(--border); gap: 10px; background: var(--panel-2); }
+      .chat-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); outline: none; }
+      .chat-btn { background: var(--accent); color: var(--vscode-button-foreground, #fff); border: none; border-radius: 8px; padding: 0 16px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
       .chat-btn:hover { opacity: 0.9; }
     </style>
   </head>
   <body>
     <div class="header">
-      <div class="header-logo">${icon.shield}</div>
       <div>
         <div class="header-title">Vibe-Guard Report</div>
         <div class="header-subtitle">Analysis powered by IBM WatsonX</div>

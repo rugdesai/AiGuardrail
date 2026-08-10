@@ -2,30 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.analyzeCode = analyzeCode;
 async function analyzeCode(code, language) {
-    // --- INTEGRATION FLAG ---
-    // Change this to 'true' when backend is hosted on a public URL!
-    const USE_REAL_API = true;
-    const API_URL = "http://127.0.0.1:8000/analyze"; // TODO: Update with hosted backend URL
-    if (!USE_REAL_API) {
-        console.log(`[Vibe-Guard] Analyzing ${language} code (MOCK MODE)`);
-        await new Promise(resolve => setTimeout(resolve, 2100));
-        return {
-            executionId: 'mock-' + Date.now(),
-            decision: 'BLOCK',
-            finalRisk: 91,
-            confidence: 0.94,
-            staticRisk: 70,
-            runtimeRisk: 95,
-            aiRisk: 90,
-            threats: [
-                'Destructive filesystem operation',
-                'Shell command execution via os.system'
-            ],
-            explanation: "The script invokes a recursive delete via os.system('rm -rf').",
-            sandboxResult: { exitCode: 0, stdout: '', stderr: '', filesCreated: [], filesModified: [], filesDeleted: [], processesSpawned: [], networkAttempts: [], durationMs: 0, timedOut: false }
-        };
-    }
-    console.log(`[Vibe-Guard] Analyzing ${language} code (REAL MODE)`);
+    const API_URL = "http://10.66.75.148:8000/analyze";
+    console.log(`[Vibe-Guard] Analyzing ${language} code...`);
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -33,39 +11,91 @@ async function analyzeCode(code, language) {
             body: JSON.stringify({ codeSnippet: code, language: language })
         });
         const data = await response.json();
-        // 1. Calculate decision from their 0-10 score
-        let calculatedDecision = 'ALLOW';
-        if (data.finalRiskScore >= 7.5) {
-            calculatedDecision = 'BLOCK';
+        // --- Map status to decision ---
+        const statusMap = {
+            'CRITICAL': 'BLOCK',
+            'HIGH': 'BLOCK',
+            'MEDIUM': 'WARN',
+            'LOW': 'ALLOW',
+            'SAFE': 'ALLOW',
+        };
+        const decision = statusMap[data.status?.toUpperCase()] ??
+            (data.finalRiskScore >= 7.5 ? 'BLOCK' : data.finalRiskScore >= 3.0 ? 'WARN' : 'ALLOW');
+        // --- Scale risk scores to 0-100 ---
+        const finalRisk = Math.round((data.finalRiskScore || 0) * 10);
+        const runtimeRisk = Math.round((data.sandbox?.sandbox_risk_score || 0) * 10);
+        // Static risk: derived from summary counts
+        const summary = data.summary || {};
+        const staticRisk = Math.min(100, ((summary.critical || 0) * 30) + ((summary.high || 0) * 15) + ((summary.medium || 0) * 7) + ((summary.low || 0) * 2));
+        // AI risk: use finalRisk as proxy when LLM was invoked
+        const aiRisk = data.llmInvoked ? finalRisk : 0;
+        // --- Build rich threat list: message + CWE/OWASP ---
+        const diagnostics = data.diagnostics || [];
+        const extractedThreats = diagnostics.map((d) => {
+            let label = d.message || 'Unknown threat';
+            if (d.cwe) {
+                label += ` [${d.cwe}]`;
+            }
+            if (d.owasp) {
+                label += ` — ${d.owasp}`;
+            }
+            return label;
+        });
+        // --- Build explanation from diagnostics ---
+        let explanation = '';
+        if (diagnostics.length === 0) {
+            explanation = `Code scanned by ${data.aiEngine || 'AI'}. No threats detected. Safe to run.`;
         }
-        else if (data.finalRiskScore >= 3.0) {
-            calculatedDecision = 'WARN';
+        else {
+            const lines = diagnostics.map((d) => {
+                let line = `• ${d.message}`;
+                if (d.lineStart) {
+                    line += ` (line ${d.lineStart})`;
+                }
+                if (d.remediation) {
+                    line += `. Fix: ${d.remediation}`;
+                }
+                return line;
+            });
+            explanation = `Detected ${diagnostics.length} issue(s) via ${data.aiEngine || 'AI'}:\n${lines.join('\n')}`;
         }
-        // 2. Extract threats from their "diagnostics" list
-        const extractedThreats = data.diagnostics
-            ? data.diagnostics.map((d) => d.message)
-            : [];
+        // --- Sandbox telemetry ---
+        const sandbox = data.sandbox || {};
         return {
             executionId: data.executionId || ('run_' + Date.now()),
-            decision: calculatedDecision,
-            finalRisk: Math.round((data.finalRiskScore || 0) * 10), // Scale 0-10 up to 0-100
-            confidence: 0.9,
-            staticRisk: 0,
-            runtimeRisk: 0,
-            aiRisk: 0,
+            decision,
+            finalRisk,
+            confidence: diagnostics[0]?.confidence ?? 0.9,
+            staticRisk,
+            runtimeRisk,
+            aiRisk,
             threats: extractedThreats,
-            explanation: extractedThreats.length > 0 ? "Threats were detected during analysis." : "Code looks safe.",
-            sandboxResult: { exitCode: 0, stdout: '', stderr: '', filesCreated: [], filesModified: [], filesDeleted: [], processesSpawned: [], networkAttempts: [], durationMs: 0, timedOut: false }
+            explanation,
+            sandboxResult: {
+                exitCode: 0,
+                stdout: '',
+                stderr: sandbox.reason || '',
+                filesCreated: sandbox.filesCreated || [],
+                filesModified: [],
+                filesDeleted: [],
+                processesSpawned: sandbox.processesSpawned || [],
+                networkAttempts: sandbox.networkAttempts || [],
+                durationMs: sandbox.duration_ms || 0,
+                timedOut: false,
+            }
         };
     }
     catch (error) {
-        console.error("API Error:", error);
+        console.error('[Vibe-Guard] API Error:', error);
         return {
             executionId: 'error',
             decision: 'WARN',
             finalRisk: 50,
-            confidence: 0, staticRisk: 0, runtimeRisk: 0, aiRisk: 0,
-            threats: ['API connection failed. Make sure backend is running.'],
+            confidence: 0,
+            staticRisk: 0,
+            runtimeRisk: 0,
+            aiRisk: 0,
+            threats: ['Could not connect to backend. Make sure the server is running.'],
             explanation: 'Could not connect to backend.',
             sandboxResult: { exitCode: 0, stdout: '', stderr: '', filesCreated: [], filesModified: [], filesDeleted: [], processesSpawned: [], networkAttempts: [], durationMs: 0, timedOut: false }
         };
