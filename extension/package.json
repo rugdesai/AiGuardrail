@@ -2,7 +2,7 @@
   "name": "vibeguard-ai",
   "displayName": "VibeGuard AI",
   "description": "AI-powered code security scanner for VS Code with static analysis, sandbox execution, risk scoring, and AI-assisted vulnerability detection.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "vibe-guard-team",
   "icon": "images/icon.png",
   "repository": {
