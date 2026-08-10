@@ -48,7 +48,7 @@ VibeGuard AI uses a layered security analysis pipeline:
                            v
                     VS Code Report
 
-(images/img1.png)
-(images/img2.png)
-(images/img3.png)
-(images/img4.png)
+(extension/images/img1.png)
+(extension/images/img2.png)
+(extension/images/img3.png)
+(extension/images/img4.png)
